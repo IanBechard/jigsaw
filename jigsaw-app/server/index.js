@@ -16,6 +16,10 @@ const io = require('socket.io')(server, {
 
 io.on('connection', (socket) => {
     console.log("user connected")
+    socket.on("createRoom", () => {
+        console.log("room created")
+    })
+
     socket.on('disconnect', () => {
         console.log("user disconnected")
     })

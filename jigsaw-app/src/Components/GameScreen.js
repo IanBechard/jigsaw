@@ -1,15 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {io} from 'socket.io-client'
-export const GameScreen = (props) => {
-        const [socket, setSocket] = useState(null);
+import React, { useEffect } from 'react';
 
-        const connect = () =>{
-            setSocket(io.connect('http://localhost:9000'));
-        }
-
+export const GameScreen = ({socket}) => {
         useEffect(() => {
-            connect();
-        }, []);
+            socket.emit('createRoom')
+        });
 
         return(
             <p>gameballs</p>
