@@ -1,25 +1,46 @@
-import logo from './logo.svg';
+import logo from './logo.png';
 import './App.css';
+import Button from 'react-bootstrap/Button';
+import "bootstrap/dist/css/bootstrap.min.css";
+import {useState} from 'react'
+import CreateScreen from "./Components/CreateScreen"
+import JoinScreen from "./Components/JoinScreen"
+import GameScreen from "./Components/GameScreen"
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('home')
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {currentPage === 'home' && (
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>
+            Jigsaw puzzle with friends
+          </p>
+          <Button onClick={() => {setCurrentPage('gamescreen')}}>Create new game</Button>
+          <Button onClick={() => {setCurrentPage('joinscreen')}}>Join a game</Button>
+          </header>
+      )}
+
+      {currentPage === 'gamescreen' && (
+        <GameScreen></GameScreen>
+      )}
+
+      {currentPage === 'createscreen' && (
+        <CreateScreen></CreateScreen>
+      )}
+
+      {currentPage === 'joinscreen' && (
+        <JoinScreen></JoinScreen>
+      )}
+
+
+
+
     </div>
   );
 }
+
 
 export default App;
