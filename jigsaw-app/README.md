@@ -1,7 +1,7 @@
 ## Available Scripts
 
 In the project directory, you can run:
-### `npm server`
+### `npm run server`
 starts the server
 
 ### `npm run dev`
