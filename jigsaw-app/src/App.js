@@ -1,6 +1,8 @@
 import logo from './logo.png';
 import './App.css';
 import Button from 'react-bootstrap/Button';
+import Container from "react-bootstrap/Container"
+import Col from "react-bootstrap/Col"
 import "bootstrap/dist/css/bootstrap.min.css";
 import {useState, useEffect} from 'react'
 import CreateScreen from "./Components/CreateScreen"
@@ -27,8 +29,11 @@ function App() {
           <p>
             Jigsaw puzzle with friends
           </p>
-          <Button onClick={() => {setCurrentPage('gamescreen')}}>Create new game</Button>
-          <Button onClick={() => {setCurrentPage('joinscreen')}}>Join a game</Button>
+          <Container className='buttonStyleContainer'>
+            <Button onClick={() => {setCurrentPage('gamescreen')}}>Create new game</Button>
+            <Col></Col>
+            <Button onClick={() => {setCurrentPage('joinscreen')}}>Join a game</Button>
+          </Container>
           </header>
       )}
 
@@ -50,6 +55,7 @@ function App() {
     </div>
   );
 }
+
 
 
 export default App;
