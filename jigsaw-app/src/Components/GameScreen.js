@@ -1,9 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
-export const GameScreen = ({socket}) => {
-        useEffect(() => {
-            socket.emit('createRoom')
-        });
+export const GameScreen = () => {
 
         return(
             <p>gameballs</p>

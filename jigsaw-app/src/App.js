@@ -30,7 +30,7 @@ function App() {
             Jigsaw puzzle with friends
           </p>
           <Container className='buttonStyleContainer'>
-            <Button onClick={() => {setCurrentPage('gamescreen')}}>Create new game</Button>
+            <Button onClick={() => {setCurrentPage('createscreen')}}>Create new game</Button>
             <Col></Col>
             <Button onClick={() => {setCurrentPage('joinscreen')}}>Join a game</Button>
           </Container>
@@ -38,15 +38,15 @@ function App() {
       )}
 
       {currentPage === 'gamescreen' && (
-        <GameScreen socket={socket}></GameScreen>
+        <GameScreen></GameScreen>
       )}
 
       {currentPage === 'createscreen' && (
-        <CreateScreen></CreateScreen>
+        <CreateScreen socket={socket}></CreateScreen>
       )}
 
       {currentPage === 'joinscreen' && (
-        <JoinScreen></JoinScreen>
+        <JoinScreen socket={socket}></JoinScreen>
       )}
 
 
