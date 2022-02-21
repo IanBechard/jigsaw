@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {Container, Form, Row, Col, Button} from 'react-bootstrap'
 import '../App.css';
 import RangeSlider from 'react-bootstrap-range-slider';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate} from 'react-router-dom';
 
 export const CreateScreen = ({socket}) => {
     const navigate = useNavigate();

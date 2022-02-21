@@ -41,28 +41,14 @@ function App() {
   return (
     <div className="App">
         <Routes>
-          <Route path="/" element={<Home/>}/>
-          <Route path="create" element={<CreateScreen socket={socket}/>}/>
-          <Route path="join" element={<JoinScreen socket={socket}/>}/>
+          <Route path="/*" element={<Home/>}/>
+          {socket && <Route path="create" element={<CreateScreen socket={socket}/>}/>}
+          {socket && <Route path="join" element={<JoinScreen socket={socket}/>}/>}  
         </Routes>
       <Outlet />
 
     </div>
   );
 }
-
-/*
-{currentPage === 'gamescreen' && (
-        <GameScreen></GameScreen>
-      )}
-
-      {currentPage === 'createscreen' && (
-        <CreateScreen socket={socket}></CreateScreen>
-      )}
-
-      {currentPage === 'joinscreen' && (
-        <JoinScreen socket={socket}></JoinScreen>
-      )}
-*/
 
 export default App;
