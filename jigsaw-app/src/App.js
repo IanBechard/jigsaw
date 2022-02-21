@@ -20,27 +20,31 @@ function App() {
       return () => newSocket.close();
   }, [setSocket]);
 
+  function Home(){
+    return(
+          <div>
+            <header className="App-header">
+              <img src={logo} className="App-logo" alt="logo" />
+              <p>
+                Jigsaw puzzle with friends
+              </p>
+              <Container className='buttonStyleContainer'>
+                <Button onClick={() => {navigate("/create")}}>Create new game</Button>
+                <Col></Col>
+                <Button onClick={() => {navigate("/join")}}>Join a game</Button>
+              </Container>
+              </header>
+            </div>
+    )
+  }
 
   return (
     <div className="App">
-
-      <Routes>
-        <Route path="create" element={<CreateScreen socket={socket}/>}/>
-        <Route path="join" element={<JoinScreen socket={socket}/>}/>
-      </Routes>
-
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Jigsaw puzzle with friends
-        </p>
-        <Container className='buttonStyleContainer'>
-          <Button onClick={() => {navigate("/create")}}>Create new game</Button>
-          <Col></Col>
-          <Button onClick={() => {navigate("/join")}}>Join a game</Button>
-        </Container>
-        </header>
-
+        <Routes>
+          <Route path="/" element={<Home/>}/>
+          <Route path="create" element={<CreateScreen socket={socket}/>}/>
+          <Route path="join" element={<JoinScreen socket={socket}/>}/>
+        </Routes>
       <Outlet />
 
     </div>
