@@ -17,8 +17,10 @@ const io = require('socket.io')(server, {
 io.on('connection', (socket) => {
     console.log("user connected");
 
+    //recieving signals
     socket.on("createRoom", () => {createRoomHandler(socket, io)});
     socket.on("joinRoom", (code) => {joinRoomHandler(socket, io, code)});
+    socket.on("destroyRoom", (code) => {destroyRoomHandler(io, code)});
     socket.on('disconnect', () => {
         console.log("user disconnected");
     });
@@ -42,6 +44,12 @@ function createRoomHandler (socket, io){
     socket.emit('roomCode', code)
     io.to(code).emit('ping')
 };
+
+function destroyRoomHandler (io, roomCode){
+    io.socketsLeave(roomCode)
+    console.log(io.of("/").adapter.rooms)
+
+}
 
 function joinRoomHandler (socket, io, code){
     code = code.toUpperCase()

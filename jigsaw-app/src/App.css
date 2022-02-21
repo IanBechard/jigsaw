@@ -34,6 +34,9 @@
   margin: 10;
 }
 
+.leftAlign {
+  margin-right: 150px;
+}
 
 .formLabelCenter {
   margin-left: 150px;

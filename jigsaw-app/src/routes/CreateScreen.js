@@ -2,8 +2,10 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {Container, Form, Row, Col, Button} from 'react-bootstrap'
 import '../App.css';
 import RangeSlider from 'react-bootstrap-range-slider';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 export const CreateScreen = ({socket}) => {
+    const navigate = useNavigate();
     const [roomCode, setRoomCode] = useState(null);
     const [difficulty, setDifficulty] = useState('medium');
     const [image, setImage] = useState(1);
@@ -32,6 +34,12 @@ export const CreateScreen = ({socket}) => {
     }
 
     useEffect(() => {
+        return () => {
+            socket.emit('destroyRoom', roomCode)
+        };
+    }, [socket, roomCode]);
+
+    useEffect(() => {
         socket.emit('createRoom')
         socket.on('ping', handlePing);
         socket.on('roomCode', (msg) => {handleRoomCode(msg)})
@@ -39,9 +47,14 @@ export const CreateScreen = ({socket}) => {
         return () => {
             socket.off('ping', handlePing)
             socket.off('roomCode', handleRoomCode)
+            setRoomCode(null)
+            setDifficulty('medium')
+            setImage(1)
+            setMaxPlayers(1)
         };
     }, [socket, handlePing, handleRoomCode]);
 
+    
 
     return(
         <div className="App-header">
@@ -106,9 +119,11 @@ export const CreateScreen = ({socket}) => {
                             />
                         </Col>
                     </Row>
+                    <Button className="leftAlign" onClick={() => {navigate("/")}}>Back</Button>
                     <Button type="submit">Connect</Button>
                 </Form>
             </Container>
+            <Outlet/>
         </div>
     );
 }

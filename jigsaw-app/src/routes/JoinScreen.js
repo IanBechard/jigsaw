@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
+import { Outlet, useNavigate } from 'react-router-dom';
 import '../App.css'
 
-export const JoinScreen = ({ socket }) => {
+export const JoinScreen = ({socket}) => {
+    const navigate = useNavigate();
     const [codeValue, setCodeValue] = useState('');
 
     const handleSubmit = (event) => {
@@ -33,8 +35,10 @@ export const JoinScreen = ({ socket }) => {
                     value={codeValue} 
                     onChange={e => setCodeValue(e.target.value)}/>
                     </Form.Group>
+                <Button className="leftAlign" onClick={() => {navigate('/')}}>Back</Button>
                 <Button type="submit">Connect</Button>
             </Form>
+            <Outlet/>
         </div>
     )
 
