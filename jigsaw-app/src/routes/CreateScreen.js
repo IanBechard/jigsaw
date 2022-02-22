@@ -27,17 +27,13 @@ export const CreateScreen = ({socket}) => {
             event.stopPropagation();
         }else{
             event.preventDefault();
-            console.log(difficulty)
-            console.log(image)
-            console.log(maxPlayers)
+            console.log(difficulty);
+            console.log(image);
+            console.log(maxPlayers);
+            navigate("../game");
         }
     }
 
-    useEffect(() => {
-        return () => {
-            socket.emit('destroyRoom', roomCode)
-        };
-    }, [socket, roomCode]);
 
     useEffect(() => {
         socket.emit('createRoom')
@@ -119,7 +115,7 @@ export const CreateScreen = ({socket}) => {
                             />
                         </Col>
                     </Row>
-                    <Button className="leftAlign" onClick={() => {navigate("/")}}>Back</Button>
+                    <Button className="leftAlign" onClick={() => {socket.emit('destroyRoom', roomCode) && navigate("/")}}>Back</Button>
                     <Button type="submit">Connect</Button>
                 </Form>
             </Container>

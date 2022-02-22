@@ -5,6 +5,8 @@ const pino = require('express-pino-logger')();
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(pino);
+app.use(express.static('public'))
+
 
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {

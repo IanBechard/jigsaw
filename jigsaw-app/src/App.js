@@ -6,6 +6,7 @@ import Col from "react-bootstrap/Col"
 import "bootstrap/dist/css/bootstrap.min.css";
 import CreateScreen from "./routes/CreateScreen"
 import JoinScreen from "./routes/JoinScreen"
+import GameScreen from "./routes/GameScreen"
 import {useState, useEffect} from 'react'
 import {io} from 'socket.io-client'
 import {Outlet, useNavigate, Route, Routes } from "react-router-dom";
@@ -41,9 +42,10 @@ function App() {
   return (
     <div className="App">
         <Routes>
-          <Route path="/*" element={<Home/>}/>
+          <Route path="/" element={<Home/>}/>
           {socket && <Route path="create" element={<CreateScreen socket={socket}/>}/>}
           {socket && <Route path="join" element={<JoinScreen socket={socket}/>}/>}  
+          {socket && <Route path="game" element={<GameScreen socket={socket}/>}/>}  
         </Routes>
       <Outlet />
 
