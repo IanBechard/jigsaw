@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 //Puzzle piece object
 class PuzzlePiece {
@@ -11,26 +11,37 @@ class PuzzlePiece {
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
-        const [pieces, setPieces] = useState([]);
-
-        function createPiece(x, y, image){
-            let img = new Image()
+        //const [pieces, setPieces] = useState([]);
+        //setPieces([...pieces, new PuzzlePiece(x, y, img)])
+        function drawPiece(x, y, imageUrl, ctx){
+            const img = new Image()
+            img.addEventListener('load', e => {
+                ctx.drawImage(img, x, y, 50, 50)
+            })
             img.src = "http://localhost:9000/piece.png"
-            setPieces([...pieces, new PuzzlePiece(50, 50, img)])
         }
 
-        //draws on canvas update
+        //draws on init
         function draw(ctx, canvas){
-            const img = new Image()
-            img.src = "http://localhost:9000/piece.png"
-            img.addEventListener('load', e => {
-                ctx.drawImage(img, 50, 50)
-            })
-            console.log(img)
+
+            //draw puzzle pieces
+            for(let x = 0; x < 200; x+=50){
+                for(let y = 0; y < 200; y+=50){
+                    drawPiece(x, y, null, ctx)
+                }
+            }
+
             ctx.fillStyle = "blue";
             ctx.fillRect(0, 0, canvas.width, canvas.height)
-            ctx.scale(1.1, 1.1) 
+            //ctx.scale(1.1, 1.1) 
         }
+
+        //canvasInit
+        useEffect(() =>{
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            draw(ctx, canvas)
+        })
 
         return(
             <div>
@@ -38,11 +49,7 @@ export const GameScreen = ({socket}) => {
                     ref={canvasRef}
                     width={window.innerWidth-100}
                     height={window.innerHeight-100}
-                    onClick={() => {
-                        const canvas = canvasRef.current;
-                        const ctx = canvas.getContext('2d');
-                        draw(ctx, canvas)
-                    }}/>
+                />
             </div>
         );
 }

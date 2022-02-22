@@ -42,7 +42,7 @@ function App() {
   return (
     <div className="App">
         <Routes>
-          <Route path="/" element={<Home/>}/>
+          <Route path="/*" element={<Home/>}/>
           {socket && <Route path="create" element={<CreateScreen socket={socket}/>}/>}
           {socket && <Route path="join" element={<JoinScreen socket={socket}/>}/>}  
           {socket && <Route path="game" element={<GameScreen socket={socket}/>}/>}  
