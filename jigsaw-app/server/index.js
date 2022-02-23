@@ -23,6 +23,7 @@ io.on('connection', (socket) => {
     socket.on("createRoom", () => {createRoomHandler(socket, io)});
     socket.on("joinRoom", (code) => {joinRoomHandler(socket, io, code)});
     socket.on("destroyRoom", (code) => {destroyRoomHandler(io, code)});
+    socket.on("pieceUpdateToServer", (pieces) => {pieceUpdateToServerHandler(socket, pieces)})
     socket.on('disconnect', () => {
         console.log("user disconnected");
     });
@@ -59,7 +60,13 @@ function joinRoomHandler (socket, io, code){
         console.log(socket.id + " joined room: " + code)
         socket.join(code)
         console.log(io.of("/").adapter.rooms)
+        console.log(socket.rooms)
     }else{
         console.log("attempted to join room that does not exist")
     }
 };
+
+function pieceUpdateToServerHandler (socket, pieces){
+    console.log('pieces update sent from server from ' + socket.id)
+    socket.to([...socket.rooms].filter(rooms => rooms!==socket.id)[0]).emit('pieceUpdateToClient', pieces)
+}
