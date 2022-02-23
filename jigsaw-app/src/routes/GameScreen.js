@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import {pieceInit} from '../helpers/puzzlePiece'
+import {insidePuzzlePiece, pieceInit} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
@@ -9,10 +9,15 @@ export const GameScreen = ({socket}) => {
         const imageHeight = 540;
         const offsetX = (canvasWidth/2) - (imageWidth/2);
         const offsetY = (canvasHeight/2) - (imageHeight/2);
+        const canvasOffsetWidth = (window.innerWidth/2) - (canvasWidth/2)
+        const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
         const pieceLength = imageHeight/9;
         const chosenImage = "http://localhost:9000/hyper960-540.png"
         const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength));
-        
+        const [mouseX, setMouseX] = useState(0);
+        const [mouseY, setMouseY] = useState(0);
+        const [isDragging, setIsDragging] = useState(false);
+        const [selectedPiece, setSelectedPiece] = useState(null);
 
         ///DRAWING FUNCTIONS
         ///
@@ -32,7 +37,6 @@ export const GameScreen = ({socket}) => {
 
         //draws on refresh
         async function draw(ctx, canvas){
-            
             ctx.fillStyle = "#323145";
             ctx.fillRect(0, 0, canvasWidth, canvasHeight)
             //draw puzzle pieces
@@ -46,6 +50,10 @@ export const GameScreen = ({socket}) => {
             //draw game loop
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d');
+            canvas.onmousedown=handleMouseDown;
+            //canvas.onmousemove=handleMouseMove;
+            //canvas.onmouseup=handleMouseUp;
+            //canvas.onmouseout=handleMouseOut;
             draw(ctx, canvas)
         })
 
@@ -75,10 +83,30 @@ export const GameScreen = ({socket}) => {
         //Send server updated pieces 
         useEffect(() =>{
             socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
-        }, [pieces, socket, offsetX, offsetY, pieceLength])
+        }, [pieces, socket])
         
 
-        
+
+
+        ///MOUSE EVENTS
+        ///
+        ///
+        function handleMouseDown(e){
+            // tell the browser we're handling this event
+            e.preventDefault();
+            e.stopPropagation();
+            // calculate the current mouse position
+            const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
+            const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
+            const inside = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
+            // test mouse position against all pieces
+            if(inside){
+                setSelectedPiece(inside)
+                setIsDragging(true);
+                return;
+            }
+            
+        }
         
 
         return(
@@ -92,8 +120,7 @@ export const GameScreen = ({socket}) => {
                 <canvas 
                     ref={canvasRef}
                     width={canvasWidth}
-                    height={canvasHeight}
-                    onClick={() =>{setPieces([...pieces])}}
+                    height={canvasHeight}  
                 />
             </div>
         );

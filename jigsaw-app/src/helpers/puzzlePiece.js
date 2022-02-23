@@ -8,10 +8,10 @@ export class PuzzlePiece {
 }
 
 export const insidePuzzlePiece = (x, y, pieces, pieceLength) => {
-    for(const piece in pieces){
+    for(let i = 0; i < pieces.length; i++){
         //in x and y range of piece
-        if(((piece.x < x) && (x < (piece.x + pieceLength))) && ((piece.y < y) && (y < (piece.y + pieceLength)))){
-            return(piece)
+        if(((pieces[i].x < x) && (x < (pieces[i].x + pieceLength))) && ((pieces[i].y < y) && (y < (pieces[i].y + pieceLength)))){
+            return(pieces[i])
         }
     }
     return null
