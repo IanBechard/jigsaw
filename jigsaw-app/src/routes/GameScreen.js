@@ -11,7 +11,7 @@ export const GameScreen = ({socket}) => {
         const offsetY = (canvasHeight/2) - (imageHeight/2);
         const canvasOffsetWidth = (window.innerWidth/2) - (canvasWidth/2)
         const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
-        const pieceLength = imageHeight/9;
+        const pieceLength = imageHeight/9; //16:9 images
         const chosenImage = "http://localhost:9000/hyper960-540.png"
         const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength));
         const [mouseX, setMouseX] = useState(0);
@@ -36,7 +36,7 @@ export const GameScreen = ({socket}) => {
         }
 
         //draws on refresh
-        async function draw(ctx, canvas){
+        async function draw(ctx){
             ctx.fillStyle = "#323145";
             ctx.fillRect(0, 0, canvasWidth, canvasHeight)
             //draw puzzle pieces
