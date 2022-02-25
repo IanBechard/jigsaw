@@ -13,45 +13,36 @@ export const GameScreen = ({socket}) => {
         const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
         const pieceLength = imageHeight/9; //16:9 images
         const chosenImage = "http://localhost:9000/hyper960-540.png"
-        const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength));
+        const [pieces, setPieces] = useState(null);
         const [mouseX, setMouseX] = useState(0);
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
         const [selectedPiece, setSelectedPiece] = useState(null);
-
-        ///DRAWING FUNCTIONS
-        ///
-        ///
-        //draws given puzzle piece
-        function drawPiece(piece, ctx){
-            return new Promise(resolve => {
-                const img = new Image()
-                img.addEventListener('load', e => {
-                    ctx.drawImage(img, piece.col*pieceLength, piece.row*pieceLength, pieceLength, pieceLength, piece.x, piece.y, pieceLength, pieceLength)
-                    resolve('resolved')
-                })
-                img.src = chosenImage
-                ctx.strokeRect(piece.col*pieceLength+offsetX, piece.row*pieceLength+offsetY, pieceLength, pieceLength)
-            })
-        }
+        const puzzleImage = new Image()
 
         //draws on refresh
         async function draw(ctx){
             ctx.fillStyle = "#323145";
             ctx.fillRect(0, 0, canvasWidth, canvasHeight)
             //draw puzzle pieces
-            for(let i = 0; i < pieces.length; i++){
-                await drawPiece(pieces[i], ctx)
+            puzzleImage.onload = () =>{
+                for(let i = 0; i < pieces.length; i++){
+                    //await drawPiece(pieces[i], ctx)
+                    ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                    ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                }
             }
+            puzzleImage.src = chosenImage
+            
         }
 
         //general onRender
         useEffect(() =>{   
             //draw game loop
             const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', {alpha: false});
             canvas.onmousedown=handleMouseDown;
-            //canvas.onmousemove=handleMouseMove;
+            canvas.onmousemove=handleMouseMove;
             //canvas.onmouseup=handleMouseUp;
             //canvas.onmouseout=handleMouseOut;
             draw(ctx, canvas)
@@ -82,10 +73,19 @@ export const GameScreen = ({socket}) => {
     
         //Send server updated pieces 
         useEffect(() =>{
-            socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
-        }, [pieces, socket])
-        
+            //if we are moving a piece send data
+            if(isDragging){
+                socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
+            }
+        }, [pieces, socket, isDragging])
 
+        //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
+        //if we havent recieved piece data yet, generate puzzle
+        useEffect(() =>{
+            if(!pieces){
+                setPieces(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength))
+            }
+        }, [pieces, offsetX, offsetY, pieceLength])
 
 
         ///MOUSE EVENTS
@@ -97,15 +97,42 @@ export const GameScreen = ({socket}) => {
             e.stopPropagation();
             // calculate the current mouse position
             const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
+            setMouseX(fnmouseX);
             const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
-            const inside = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
+            setMouseY(fnmouseY);
+            const insidePiece = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
             // test mouse position against all pieces
-            if(inside){
-                setSelectedPiece(inside)
+            if(insidePiece){
+                setSelectedPiece(insidePiece)
                 setIsDragging(true);
                 return;
             }
             
+        }
+
+        function handleMouseMove(e){
+            // return if we're not dragging
+            if(!isDragging){return;}
+            // tell the browser we're handling this event
+            e.preventDefault();
+            e.stopPropagation();
+            // calculate the current mouse position         
+            const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
+            const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
+            // how far has the mouse dragged from its previous mousemove position?
+            const dx=fnmouseX-mouseX;
+            const dy=fnmouseY-mouseY;
+            // Update piece object with new xy
+            const index = pieces.indexOf(selectedPiece)
+            let tempPieces = [...pieces]
+            let tempPiece = pieces[index]
+            tempPiece.x += dx;
+            tempPiece.y += dy;
+            tempPieces[index] = tempPiece;
+            setPieces(tempPieces);
+            // update the starting drag position (== the current mouse position)
+            setMouseX(fnmouseX);
+            setMouseY(fnmouseY);
         }
         
 
