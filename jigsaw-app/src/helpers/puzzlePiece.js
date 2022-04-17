@@ -4,6 +4,7 @@ export class PuzzlePiece {
         this.y = y;
         this.col = col;
         this.row = row;
+        this.locked = false;
     }
 }
 
@@ -15,6 +16,15 @@ export const insidePuzzlePiece = (x, y, pieces, pieceLength) => {
         }
     }
     return null
+}
+
+export const insidePieceGridPlace = (x, y, piece, pieceLength, offsetX, offsetY) => {
+    const pieceX = piece.col*pieceLength+offsetX
+    const pieceY = piece.row*pieceLength+offsetY
+    if((x >= pieceX && x <= pieceX+pieceLength) && (y >= pieceY && y <= pieceY+pieceLength)){
+        return true;
+    }
+    return false;
 }
 
 

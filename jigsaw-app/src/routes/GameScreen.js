@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import {insidePuzzlePiece, pieceInit} from '../helpers/puzzlePiece'
+import {insidePuzzlePiece, pieceInit, insidePieceGridPlace} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
@@ -13,7 +13,7 @@ export const GameScreen = ({socket}) => {
         const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
         const pieceLength = imageHeight/9; //16:9 images
         const chosenImage = "http://localhost:9000/hyper960-540.png"
-        const [pieces, setPieces] = useState(null);
+        const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength));
         const [mouseX, setMouseX] = useState(0);
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
@@ -43,7 +43,7 @@ export const GameScreen = ({socket}) => {
             const ctx = canvas.getContext('2d', {alpha: false});
             canvas.onmousedown=handleMouseDown;
             canvas.onmousemove=handleMouseMove;
-            //canvas.onmouseup=handleMouseUp;
+            canvas.onmouseup=handleMouseUp;
             //canvas.onmouseout=handleMouseOut;
             draw(ctx, canvas)
         })
@@ -81,12 +81,13 @@ export const GameScreen = ({socket}) => {
 
         //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
         //if we havent recieved piece data yet, generate puzzle
+        /*
         useEffect(() =>{
             if(!pieces){
                 setPieces(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength))
             }
         }, [pieces, offsetX, offsetY, pieceLength])
-
+*/
 
         ///MOUSE EVENTS
         ///
@@ -95,20 +96,55 @@ export const GameScreen = ({socket}) => {
             // tell the browser we're handling this event
             e.preventDefault();
             e.stopPropagation();
+
             // calculate the current mouse position
             const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
             setMouseX(fnmouseX);
             const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
             setMouseY(fnmouseY);
+
             const insidePiece = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
             // test mouse position against all pieces
             if(insidePiece){
-                setSelectedPiece(insidePiece)
-                setIsDragging(true);
+                if(!insidePiece.locked){
+                    setSelectedPiece(insidePiece)
+                    setIsDragging(true);
+                }
                 return;
             }
             
         }
+
+        function handleMouseUp(e){
+            // return if we're not dragging
+            if(!isDragging){return;}
+            // tell the browser we're handling this event
+            e.preventDefault();
+            e.stopPropagation();
+
+            // the drag is over, check if piece is in and clear drag flags
+            const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
+            setMouseX(fnmouseX);
+            const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
+            setMouseY(fnmouseY);
+
+            //If mouse is in box with correct piece, lock it in
+            if(insidePieceGridPlace(fnmouseX, fnmouseY, selectedPiece, pieceLength, offsetX, offsetY)){
+                // Update piece object as locked in and update xy to proper grid place
+                const index = pieces.indexOf(selectedPiece)
+                let tempPieces = [...pieces]
+                let tempPiece = pieces[index]
+                tempPiece.x = tempPiece.col*pieceLength+offsetX;
+                tempPiece.y = tempPiece.row*pieceLength+offsetY;
+                tempPiece.locked = true;
+                tempPieces[index] = tempPiece;
+                setPieces(tempPieces);
+            }
+
+            setSelectedPiece(null);
+            setIsDragging(false);
+        }
+
 
         function handleMouseMove(e){
             // return if we're not dragging
