@@ -4,7 +4,7 @@ import {insidePuzzlePiece, pieceInit, insidePieceGridPlace} from '../helpers/puz
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
         const canvasWidth = 1536;
-        const canvasHeight = 864 ;
+        const canvasHeight = 1000;
         const imageWidth = 960;
         const imageHeight = 540;
         const offsetX = (canvasWidth/2) - (imageWidth/2);
@@ -13,7 +13,7 @@ export const GameScreen = ({socket}) => {
         const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
         const pieceLength = imageHeight/9; //16:9 images
         const chosenImage = "http://localhost:9000/hyper960-540.png"
-        const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength));
+        const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength)); 
         const [mouseX, setMouseX] = useState(0);
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
@@ -22,30 +22,38 @@ export const GameScreen = ({socket}) => {
 
         //draws on refresh
         async function draw(ctx){
-            ctx.fillStyle = "#323145";
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight)
-            //draw puzzle pieces
-            puzzleImage.onload = () =>{
-                for(let i = 0; i < pieces.length; i++){
-                    //await drawPiece(pieces[i], ctx)
-                    ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
-                    ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+            if(isDragging && selectedPiece){
+                puzzleImage.onload = () =>{
+                    ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
                 }
+                puzzleImage.src = chosenImage
             }
-            puzzleImage.src = chosenImage
-            
+            else{
+                //full draw
+                ctx.fillStyle = "#323145";
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+                //draw puzzle pieces
+                puzzleImage.onload = () =>{
+                    for(let i = 0; i < pieces.length; i++){
+                        ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                        ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                    }
+                }
+                puzzleImage.src = chosenImage
+            }
         }
 
         //general onRender
         useEffect(() =>{   
-            //draw game loop
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d', {alpha: false});
+            //draw game loop
             canvas.onmousedown=handleMouseDown;
             canvas.onmousemove=handleMouseMove;
-            canvas.onmouseup=handleMouseUp;
+            //canvas.onmouseup=handleMouseUp;
             //canvas.onmouseout=handleMouseOut;
-            draw(ctx, canvas)
+            draw(ctx)
         })
 
 
@@ -87,7 +95,7 @@ export const GameScreen = ({socket}) => {
                 setPieces(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength))
             }
         }, [pieces, offsetX, offsetY, pieceLength])
-*/
+        */
 
         ///MOUSE EVENTS
         ///
@@ -102,19 +110,37 @@ export const GameScreen = ({socket}) => {
             setMouseX(fnmouseX);
             const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
             setMouseY(fnmouseY);
-
-            const insidePiece = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
-            // test mouse position against all pieces
-            if(insidePiece){
-                if(!insidePiece.locked){
-                    setSelectedPiece(insidePiece)
-                    setIsDragging(true);
+            if(isDragging){
+                //If mouse is in box with correct piece, lock it in
+                if(insidePieceGridPlace(fnmouseX, fnmouseY, selectedPiece, pieceLength, offsetX, offsetY)){
+                    // Update piece object as locked in and update xy to proper grid place
+                    const index = pieces.indexOf(selectedPiece)
+                    let tempPieces = [...pieces]
+                    let tempPiece = pieces[index]
+                    tempPiece.x = tempPiece.col*pieceLength+offsetX;
+                    tempPiece.y = tempPiece.row*pieceLength+offsetY;
+                    tempPiece.locked = true;
+                    tempPieces[index] = tempPiece;
+                    setPieces(tempPieces);
                 }
-                return;
-            }
+
+                setSelectedPiece(null);
+                setIsDragging(false);
+            }else{
+                const insidePiece = insidePuzzlePiece(fnmouseX, fnmouseY, pieces, pieceLength)
+                // test mouse position against all pieces
+                if(insidePiece){
+                    if(!insidePiece.locked){
+                        setSelectedPiece(insidePiece)
+                        setIsDragging(true);
+                    }
+                    return;
+                }
+            }   
             
         }
 
+        /*
         function handleMouseUp(e){
             // return if we're not dragging
             if(!isDragging){return;}
@@ -127,24 +153,10 @@ export const GameScreen = ({socket}) => {
             setMouseX(fnmouseX);
             const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
             setMouseY(fnmouseY);
-
-            //If mouse is in box with correct piece, lock it in
-            if(insidePieceGridPlace(fnmouseX, fnmouseY, selectedPiece, pieceLength, offsetX, offsetY)){
-                // Update piece object as locked in and update xy to proper grid place
-                const index = pieces.indexOf(selectedPiece)
-                let tempPieces = [...pieces]
-                let tempPiece = pieces[index]
-                tempPiece.x = tempPiece.col*pieceLength+offsetX;
-                tempPiece.y = tempPiece.row*pieceLength+offsetY;
-                tempPiece.locked = true;
-                tempPieces[index] = tempPiece;
-                setPieces(tempPieces);
-            }
-
-            setSelectedPiece(null);
-            setIsDragging(false);
+        
+            
         }
-
+        */
 
         function handleMouseMove(e){
             // return if we're not dragging
@@ -158,6 +170,7 @@ export const GameScreen = ({socket}) => {
             // how far has the mouse dragged from its previous mousemove position?
             const dx=fnmouseX-mouseX;
             const dy=fnmouseY-mouseY;
+            
             // Update piece object with new xy
             const index = pieces.indexOf(selectedPiece)
             let tempPieces = [...pieces]
@@ -165,10 +178,14 @@ export const GameScreen = ({socket}) => {
             tempPiece.x += dx;
             tempPiece.y += dy;
             tempPieces[index] = tempPiece;
+
+            //update pieces
             setPieces(tempPieces);
+
             // update the starting drag position (== the current mouse position)
             setMouseX(fnmouseX);
             setMouseY(fnmouseY);
+
         }
         
 
