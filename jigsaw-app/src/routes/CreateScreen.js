@@ -6,7 +6,7 @@ import { Outlet, useNavigate} from 'react-router-dom';
 
 export const CreateScreen = ({socket}) => {
     const navigate = useNavigate();
-    const [roomCode, setRoomCode] = useState(null);
+    const [roomCode, setRoomCode] = useState('');
     const [difficulty, setDifficulty] = useState('medium');
     const [image, setImage] = useState(1);
     const [maxPlayers, setMaxPlayers] = useState(1);
@@ -30,6 +30,8 @@ export const CreateScreen = ({socket}) => {
             console.log(difficulty);
             console.log(image);
             console.log(maxPlayers);
+            //send our options data to server to create lobby
+            socket.emit("createRoomData", roomCode, difficulty, image, maxPlayers);
             navigate("../game");
         }
     }

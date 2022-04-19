@@ -1,25 +1,47 @@
 import React, {useEffect, useRef, useState, useCallback} from 'react';
-import {insidePuzzlePiece, pieceInit, insidePieceGridPlace} from '../helpers/puzzlePiece'
+import {insidePuzzlePiece, insidePieceGridPlace} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
+
+        //constants used to gen canvas and puzzle pieces
+        //note that in a better world these would be recieved by the server as data, and not exist in both as seperate vars
         const canvasWidth = 1536;
         const canvasHeight = 1000;
         const imageWidth = 960;
         const imageHeight = 540;
         const offsetX = (canvasWidth/2) - (imageWidth/2);
         const offsetY = (canvasHeight/2) - (imageHeight/2);
-        const canvasOffsetWidth = (window.innerWidth/2) - (canvasWidth/2)
-        const canvasOffsetHeight = (window.innerHeight/2) - (canvasHeight/2)
         const pieceLength = imageHeight/9; //16:9 images
+
+        const canvasOffsetWidth = (window.innerWidth/2) - (canvasWidth/2)
+        const canvasOffsetHeight = ((window.innerHeight)/2) - (canvasHeight/2)
+
+        //roomData
+        const [roomCode, setRoomCode] = useState('')
         const chosenImage = "http://localhost:9000/hyper960-540.png"
-        const [pieces, setPieces] = useState(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength)); 
+        const [pieces, setPieces] = useState(null); 
+
+
         const [mouseX, setMouseX] = useState(0);
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
         const [selectedPiece, setSelectedPiece] = useState(null);
         const puzzleImage = new Image()
 
+        //Initial room data request and handling
+        const handleRoomData = useCallback((roomData) => {
+            console.log("room data recieved:")
+            console.log(roomData)
+            setPieces(roomData.pieces);
+            setRoomCode(roomData.roomCode);
+        }, [setPieces, setRoomCode]);
+
+        useEffect(() =>{
+            socket.emit('roomDataRequest', (response) => {handleRoomData((response['roomData']))});
+        }, [socket, handleRoomData])
+
+    
         //draws on refresh
         async function draw(ctx){
             if(isDragging && selectedPiece){
@@ -46,22 +68,23 @@ export const GameScreen = ({socket}) => {
 
         //general onRender
         useEffect(() =>{   
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d', {alpha: false});
-            //draw game loop
-            canvas.onmousedown=handleMouseDown;
-            canvas.onmousemove=handleMouseMove;
-            //canvas.onmouseup=handleMouseUp;
-            //canvas.onmouseout=handleMouseOut;
-            draw(ctx)
+            if(roomCode){
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d', {alpha: false});
+                //draw game loop
+                canvas.onmousedown=handleMouseDown;
+                canvas.onmousemove=handleMouseMove;
+                //canvas.onmouseup=handleMouseUp;
+                //canvas.onmouseout=handleMouseOut;
+                draw(ctx)
+            }
         })
-
-
 
 
         ///PUZZLE PIECE REQUESTS
         ///
-        ///
+        ///REMOVED TEMP??? 
+        /*
         const handlePieceUpdate = useCallback((piecesFromServer) =>{
             if(JSON.stringify(pieces) !== JSON.stringify(piecesFromServer)){
                 setPieces(piecesFromServer)
@@ -86,6 +109,7 @@ export const GameScreen = ({socket}) => {
                 socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
             }
         }, [pieces, socket, isDragging])
+        */
 
         //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
         //if we havent recieved piece data yet, generate puzzle
@@ -190,19 +214,25 @@ export const GameScreen = ({socket}) => {
         
 
         return(
-            <div style={{backgroundColor: '#19232b',
-                        width: window.innerWidth,
-                        height: window.innerHeight,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                        }}>
-                <canvas 
-                    ref={canvasRef}
-                    width={canvasWidth}
-                    height={canvasHeight}  
-                />
-            </div>
+            <>
+                <div style={{backgroundColor: '#19232b',
+                            width: window.innerWidth,
+                            height: window.innerHeight,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                            }}>
+                    <canvas 
+                        ref={canvasRef}
+                        width={canvasWidth}
+                        height={canvasHeight}  
+                    />
+                </div>
+                <p style={{backgroundColor: '#323145',
+                            color:'white'
+                            }}>
+                                Room Code: {roomCode}</p>
+            </>
         );
 }
 
