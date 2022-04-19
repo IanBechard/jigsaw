@@ -19,7 +19,7 @@ export const GameScreen = ({socket}) => {
 
         //roomData
         const [roomCode, setRoomCode] = useState('')
-        const chosenImage = "http://localhost:9000/hyper960-540.png"
+        const chosenImage = "http://jigsaw.ianbechard.ca/hyper960-540.png"
         const [pieces, setPieces] = useState(null); 
 
 
@@ -83,24 +83,15 @@ export const GameScreen = ({socket}) => {
 
         ///PUZZLE PIECE REQUESTS
         ///
-        ///REMOVED TEMP??? 
-        /*
-        const handlePieceUpdate = useCallback((piecesFromServer) =>{
-            if(JSON.stringify(pieces) !== JSON.stringify(piecesFromServer)){
-                setPieces(piecesFromServer)
-                console.log('recieved pieces and modified')
-            }
-            console.log('recieved and not modified')
-        }, [pieces, setPieces]);
-        
+        ///
         
         //Recieve updated pieces
         useEffect(() => {
-            socket.on('pieceUpdateToClient', (piecesFromServer) => {handlePieceUpdate(JSON.parse(piecesFromServer))})
+            socket.on('pieceUpdateToClient', (response) => {handleRoomData(response['roomData'])})
             return(() =>{
                 socket.off('pieceUpdateToClient')
             })
-        }, [socket, handlePieceUpdate])
+        }, [socket, handleRoomData])
     
         //Send server updated pieces 
         useEffect(() =>{
@@ -109,7 +100,7 @@ export const GameScreen = ({socket}) => {
                 socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
             }
         }, [pieces, socket, isDragging])
-        */
+        
 
         //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
         //if we havent recieved piece data yet, generate puzzle
@@ -145,6 +136,7 @@ export const GameScreen = ({socket}) => {
                     tempPiece.y = tempPiece.row*pieceLength+offsetY;
                     tempPiece.locked = true;
                     tempPieces[index] = tempPiece;
+                    setSelectedPiece(tempPiece)
                     setPieces(tempPieces);
                 }
 
@@ -164,6 +156,7 @@ export const GameScreen = ({socket}) => {
             
         }
 
+        //This function could be in instead of toggling clicking a piece, could be click and hold to drag
         /*
         function handleMouseUp(e){
             // return if we're not dragging

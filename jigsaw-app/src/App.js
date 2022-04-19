@@ -14,9 +14,10 @@ import {Outlet, useNavigate, Route, Routes } from "react-router-dom";
 function App() {
   const [socket, setSocket] = useState(null);
   const navigate = useNavigate()
-
+  const url = 'http://jigsaw.ianbechard.ca'
+  //const url = 'http://localhost:8080'
   useEffect(() => {
-      const newSocket = io.connect('http://localhost:9000');
+      const newSocket = io.connect(url);
       setSocket(newSocket);
       return () => newSocket.close();
   }, [setSocket]);

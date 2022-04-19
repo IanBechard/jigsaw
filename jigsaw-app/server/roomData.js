@@ -16,21 +16,6 @@ class roomData {
         this.maxPlayers = 0;
         this.roomCode = "";
     }
-    
-    getUpdatePieces(newPiece){
-        index = null
-        this.pieces.map((fnpiece) => {
-            if((newPiece.row === fnpiece.row) && (newPiece.col === fnpiece.col)){
-                index = this.pieces.indexOf(fnpiece)
-            }
-        })
-
-        if(index){
-            this.pieces[index] = piece
-        }
-
-        return pieces
-    }
 
     pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength){
 
@@ -60,7 +45,6 @@ class roomData {
         }
     
         this.pieces = pieceArray;
-        return this.pieces
     }
 }
 

@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 
 
+const origin = "http://jigsaw.ianbechard.ca"
+//const origin = "http://localhost:3000"
+
 //map of roomcode to roomData object
 const roomDataMap = new Map();
 
@@ -16,7 +19,7 @@ app.use(express.static('public'))
 const server = require('http').createServer(app);
 const io = require('socket.io')(server, {
         cors: {
-            origin: "http://localhost:3000",
+            origin: origin,
             methods: ["GET", "POST"]
         }
     });
@@ -36,8 +39,8 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(9000, () => {
-    console.log('Socket.io server is running on localhost:9000')
+server.listen(8080, () => {
+    console.log('Socket.io server is running on localhost:8080')
 })
 
 function createRoomHandler (socket, io){
@@ -106,6 +109,19 @@ function joinRoomHandler (socket, io, code){
 };
 
 function pieceUpdateToServerHandler (socket, pieces){
-    console.log('pieces update sent from server from ' + socket.id)
-    socket.to([...socket.rooms].filter(rooms => rooms!==socket.id)[0]).emit('pieceUpdateToClient', pieces)
-}
+    code = [...socket.rooms].filter(rooms => rooms!==socket.id)[0]
+    console.log('piece update sent from server from ' + socket.id + ' in room ' + code)
+
+    if(roomDataMap.has(code)){
+        //update with new piece info
+        let data = roomDataMap.get(code)
+        data.pieces = JSON.parse(pieces)
+        roomDataMap.set(code, data)
+
+        //send it to everyone else
+        socket.to(code).emit('pieceUpdateToClient', {roomData: data})
+    }
+    else{
+        console.log("pieceUpdateToServerHandler: roomData not found in map")
+    }
+}   
