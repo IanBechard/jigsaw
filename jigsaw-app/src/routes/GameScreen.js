@@ -1,9 +1,9 @@
-import React, {useEffect, useRef, useState, useCallback} from 'react';
+import React, {useEffect, useRef, useState, useLayoutEffect, useCallback} from 'react';
 import {insidePuzzlePiece, insidePieceGridPlace} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
-
+        const frameRequestIdRef = useRef(null);
         //constants used to gen canvas and puzzle pieces
         //note that in a better world these would be recieved by the server as data, and not exist in both as seperate vars
         const canvasWidth = 1536;
@@ -44,52 +44,58 @@ export const GameScreen = ({socket}) => {
 
         
     
-        
 
-        //general onRender
-        useEffect(() =>{   
-            let requestId;
+        ///RENDER LOOP 
 
-            //draws on refresh
-            async function draw(ctx){
-                if(isDragging && selectedPiece){
-                    puzzleImage.onload = () =>{
-                        ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
-                    }
-                    puzzleImage.src = chosenImage
+        //draws on refresh
+        async function draw(){
+
+            const ctx = canvasRef.current.getContext('2d', {alpha: false});
+
+            /*if(isDragging && selectedPiece){
+                puzzleImage.onload = () =>{
+                    ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
                 }
-                else{
-                    //full draw
-                    ctx.fillStyle = "#323145";
-                    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
-
-                    //draw puzzle pieces
-                    puzzleImage.onload = () =>{
-                        for(let i = 0; i < pieces.length; i++){
-                            ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
-                            ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
-                        }
-                    }
-                    
-                }
-                requestId = requestAnimationFrame(draw);
+                puzzleImage.src = chosenImage
             }
+            else{ */
+            puzzleImage.src = chosenImage
+                //full draw
+                ctx.fillStyle = "#323145";
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-            if(roomCode){ 
+                //draw puzzle pieces
+                puzzleImage.onload = () =>{
+                    for(let i = 0; i < pieces.length; i++){
+                        ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                        ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                    }
+                }
+                
+        
+            frameRequestIdRef.current = requestAnimationFrame(draw);
+        }
+
+        //general onRender loop
+        useEffect(() =>{   
+
+            if(roomCode && pieces){ 
                 const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d', {alpha: false});
+                
                 //draw game loop
                 canvas.onmousedown=handleMouseDown;
                 canvas.onmousemove=handleMouseMove;
                 //canvas.onmouseup=handleMouseUp;
                 //canvas.onmouseout=handleMouseOut;
-                draw(ctx);
+                frameRequestIdRef.current = requestAnimationFrame(draw);
             }
 
             return () => {
-                cancelAnimationFrame(requestId);
+                cancelAnimationFrame(frameRequestIdRef.current);
             };
-        })
+        }, [draw])
+
+        
 
 
         ///PUZZLE PIECE REQUESTS
