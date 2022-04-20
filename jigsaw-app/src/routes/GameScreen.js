@@ -1,9 +1,10 @@
 import React, {useEffect, useRef, useState, useLayoutEffect, useCallback} from 'react';
+import {useNavigate} from 'react-router-dom';
 import {insidePuzzlePiece, insidePieceGridPlace} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
-        const frameRequestIdRef = useRef(null);
+        const navigate = useNavigate();
         //constants used to gen canvas and puzzle pieces
         //note that in a better world these would be recieved by the server as data, and not exist in both as seperate vars
         const canvasWidth = 1536;
@@ -19,7 +20,13 @@ export const GameScreen = ({socket}) => {
 
         //roomData
         const [roomCode, setRoomCode] = useState('')
-        const chosenImage = "http://jigsaw.ianbechard.ca/hyper960-540.png"
+        const chosenImageArray = [
+            "http://jigsaw.ianbechard.ca/puzzleImages/hyperbeast_960-540.png",
+            "http://jigsaw.ianbechard.ca/puzzleImages/hyperbeast2_960-540.png",
+            "http://jigsaw.ianbechard.ca/puzzleImages/bloodMoonPixel_960-540.png",
+            "http://jigsaw.ianbechard.ca/puzzleImages/pixelFlower_960-540.png"
+        ];
+        const [chosenImageIndex, setChosenImageIndex] = useState(0)
         const [pieces, setPieces] = useState(null); 
 
 
@@ -36,14 +43,22 @@ export const GameScreen = ({socket}) => {
             console.log(roomData)
             setPieces(roomData.pieces);
             setRoomCode(roomData.roomCode);
+            setChosenImageIndex(roomData.image);
             setShouldStop(false); //starts our game loop
         }, [setPieces, setRoomCode]);
 
         useEffect(() =>{
-            socket.emit('roomDataRequest', (response) => {handleRoomData((response['roomData']))});
-        }, [socket, handleRoomData])
+            socket.emit('roomDataRequest', (response) => {
+                if(response && !response.error){
+                    handleRoomData((response['roomData']))
+                }else{//we arent in a room so we probably lost connection or refreshed, in that case leave room and go to home
+                    socket.emit('leaveRoom', roomCode);
+                    navigate('../')
+                }
 
-        
+            });
+        }, [socket, handleRoomData, navigate, roomCode])
+
     
 
         ///RENDER LOOP STUFF
@@ -67,24 +82,25 @@ export const GameScreen = ({socket}) => {
 
         // output graphics
         useEffect(() => {
-            const canvas = canvasRef.current;
-            const ctx = canvasRef.current.getContext('2d', {alpha: false});
-            //Initialize mouse events
-            canvas.onmousedown=handleMouseDown;
-            canvas.onmousemove=handleMouseMove;
+            if(roomCode){
+                const canvas = canvasRef.current;
+                const ctx = canvasRef.current.getContext('2d', {alpha: false});
+                //Initialize mouse events
+                canvas.onmousedown=handleMouseDown;
+                canvas.onmousemove=handleMouseMove;
 
-            ctx.fillStyle = "#323145";
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+                ctx.fillStyle = "#323145";
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-            //draw puzzle pieces
-             puzzleImage.onload = () =>{
-                for(let i = 0; i < pieces.length; i++){
-                    ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
-                    ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                //draw puzzle pieces
+                puzzleImage.onload = () =>{
+                    for(let i = 0; i < pieces.length; i++){
+                        ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                        ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                    }
                 }
+                puzzleImage.src = chosenImageArray[chosenImageIndex];
             }
-            puzzleImage.src = chosenImage
-
         }, [counter])
 
 
@@ -98,7 +114,7 @@ export const GameScreen = ({socket}) => {
             return(() =>{
                 socket.off('pieceUpdateToClient')
             })
-        }, [socket, handleRoomData])
+        }, [socket, handleRoomData, roomCode])
     
         //Send server updated pieces 
         useEffect(() =>{
@@ -109,16 +125,6 @@ export const GameScreen = ({socket}) => {
             }
         }, [pieces, socket, sendSelectedPiece, selectedPiece])
         
-
-        //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
-        //if we havent recieved piece data yet, generate puzzle
-        /*
-        useEffect(() =>{
-            if(!pieces){
-                setPieces(pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength))
-            }
-        }, [pieces, offsetX, offsetY, pieceLength])
-        */
 
         ///MOUSE EVENTS
         ///

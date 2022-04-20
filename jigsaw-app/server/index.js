@@ -48,9 +48,7 @@ class roomData {
                     return getRandomXY()
                 }
             }
-            
         }
-    
     
         let pieceArray = []
         for(let col = 0; col < 16; col++){
@@ -89,7 +87,8 @@ io.on('connection', (socket) => {
     socket.on("createRoom", () => {createRoomHandler(socket, io)});
     socket.on("createRoomData", (code, difficulty, image, maxPlayers) => {createRoomDataHandler(code, difficulty, image, maxPlayers)});
     socket.on("roomDataRequest", (callback) => {roomDataRequestHandler(socket, callback)});
-    socket.on("joinRoom", (code) => {joinRoomHandler(socket, io, code)});
+    socket.on("joinRoom", (code, callback) => {joinRoomHandler(socket, io, code, callback)});
+    socket.on("leaveRoom", (code) => {leaveRoomHandler(socket, code)});
     socket.on("destroyRoom", (code) => {destroyRoomHandler(io, code)});
     socket.on("pieceUpdateToServer", (movingPiece) => {pieceUpdateToServerHandler(socket, movingPiece)})
     socket.on('disconnect', () => {
@@ -109,6 +108,9 @@ function createRoomHandler (socket, io){
         } 
         if(!io.of("/").adapter.rooms.has(code)){break;}
     }
+    //leave all previous rooms to avoid navigation errors
+    socket.rooms.forEach((room) => {if(room!==socket.id){console.log(socket.id + " left room " + room); socket.leave(room)}})
+
     console.log("room created: " + code);
     socket.join(code);
     console.log(socket.id + " joined room: " + code)
@@ -117,17 +119,17 @@ function createRoomHandler (socket, io){
 };
 
 
-//Constants for generating piece layout in createRoomDataHandler
-const canvasWidth = 1536;
-const canvasHeight = 1000;
-const imageWidth = 960;
-const imageHeight = 540;
-const offsetX = (canvasWidth/2) - (imageWidth/2);
-const offsetY = (canvasHeight/2) - (imageHeight/2);
-const pieceLength = imageHeight/9; //16:9 images
-
 
 function createRoomDataHandler (code, difficulty, image, maxPlayers){
+    //Constants for generating piece layout in createRoomDataHandler
+    const canvasWidth = 1536;
+    const canvasHeight = 1000;
+    const imageWidth = 960;
+    const imageHeight = 540;
+    const offsetX = (canvasWidth/2) - (imageWidth/2);
+    const offsetY = (canvasHeight/2) - (imageHeight/2);
+    const pieceLength = imageHeight/9; //16:9 images
+
     code = code.toUpperCase()
     let data = new roomData();
     data.difficulty = difficulty;
@@ -145,6 +147,7 @@ function roomDataRequestHandler(socket, callback){
         callback({roomData: roomDataMap.get(code)});
     }else{
         console.log("roomDataRequestHandler: data hasnt arrived yet or you're not in a room yet")
+        callback({error: "no room data"})
     }
 }
 
@@ -154,21 +157,38 @@ function destroyRoomHandler (io, roomCode){
 
 }
 
-function joinRoomHandler (socket, io, code){
+function leaveRoomHandler(socket, code){
     code = code.toUpperCase()
-    if(io.of("/").adapter.rooms.has(code)){
-        console.log(socket.id + " joined room: " + code)
-        socket.join(code)
-        console.log(io.of("/").adapter.rooms)
-        console.log(socket.rooms)
-    }else{
-        console.log("attempted to join room that does not exist")
+
+    socket.leave(code);
+    console.log("leaveRoomHandler: " + socket.id + " left room " + code)
+}
+
+function joinRoomHandler (socket, io, code, callback){
+    code = code.toUpperCase()
+    if(io.of("/").adapter.rooms.has(code)){ //If the room exists
+        currentNumPlayers = io.of("/").adapter.rooms.get(code).size
+        roomMaxPlayers = roomDataMap.get(code).maxPlayers
+        if(currentNumPlayers < roomMaxPlayers){ //Check if space available in room
+            //leave all previous rooms to avoid navigation errors
+            socket.rooms.forEach((room) => {if(room!==socket.id){console.log(socket.id + " left room " + room); socket.leave(room)}})
+
+            console.log(socket.id + " joined room: " + code)
+            socket.join(code)
+            console.log(io.of("/").adapter.rooms)
+            console.log(socket.rooms)
+            callback({})
+        }else{//No space
+            callback({error: "Room is full"})
+        }
+    }else{//Room doesnt exist
+        callback({error: "Room does not exist"})
     }
 };
 
 function pieceUpdateToServerHandler (socket, movingPiece){
     code = [...socket.rooms].filter(rooms => rooms!==socket.id)[0]
-    console.log(movingPiece + ' from ' + socket.id + ' in room ' + code)
+    console.log('piece row:' + movingPiece.row + ' col:' + movingPiece.col +' from ' + socket.id + ' moved in room ' + code)
     if(roomDataMap.has(code)){
         //update with new piece info
         let data = roomDataMap.get(code)

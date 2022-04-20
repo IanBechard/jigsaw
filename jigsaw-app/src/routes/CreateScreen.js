@@ -8,13 +8,13 @@ export const CreateScreen = ({socket}) => {
     const navigate = useNavigate();
     const [roomCode, setRoomCode] = useState('');
     const [difficulty, setDifficulty] = useState('medium');
-    const [image, setImage] = useState(1);
-    const [maxPlayers, setMaxPlayers] = useState(1);
+    const [image, setImage] = useState(0);
+    const [maxPlayers, setMaxPlayers] = useState(20);
 
     const handlePing = useCallback(() => {
         console.log("ping recieved")
     }, []);
-
+    
     const handleRoomCode = useCallback((roomCode) => {
         console.log(roomCode)
         setRoomCode(roomCode)
@@ -96,8 +96,10 @@ export const CreateScreen = ({socket}) => {
                             <Form.Select
                                 onChange={e => {setImage(e.target.value)}}
                             >
-                                <option value='1'>Image A</option>
-                                <option value='2'>Image B</option>
+                                <option value='0'>HyperBeast</option>
+                                <option value='1'>HyperBeast2</option>
+                                <option value='2'>Pixel Blood Moon</option>
+                                <option value='3'>Pixel Flowers</option>
                             </Form.Select>
                         </Col>
                     </Row>

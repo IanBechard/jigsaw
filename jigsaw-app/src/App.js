@@ -28,7 +28,7 @@ function App() {
             <header className="App-header">
               <img src={logo} className="App-logo" alt="logo" />
               <p>
-                Jigsaw puzzle with friends
+                Puzzle with friends
               </p>
               <Container className='buttonStyleContainer'>
                 <Button onClick={() => {navigate("/create")}}>Create new game</Button>

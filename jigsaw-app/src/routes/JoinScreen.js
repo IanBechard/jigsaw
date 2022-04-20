@@ -15,8 +15,15 @@ export const JoinScreen = ({socket}) => {
         }else{
             setCodeValue(codeValue.toUpperCase());
             event.preventDefault();
-            socket.emit("joinRoom", codeValue);
-            navigate("../game")
+            socket.emit("joinRoom", codeValue, (response) => {
+                if(response.error){
+                    alert(response.error)//Alert form error from server
+                }
+                else{//no error, move to game screen
+                    navigate("../game")
+                }
+            });
+            
         }
     }
 
