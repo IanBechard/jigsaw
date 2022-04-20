@@ -1,11 +1,64 @@
-const roomData = require('./roomData.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 
 
+
 const origin = "http://jigsaw.ianbechard.ca"
 //const origin = "http://localhost:3000"
+
+//Classes
+
+class PuzzlePiece {
+    constructor(x, y, col, row){
+        this.x = x;
+        this.y = y;
+        this.col = col;
+        this.row = row;
+        this.locked = false;
+    }
+}
+
+class roomData {
+    constructor() {
+        this.pieces = [];
+        this.difficulty = "";
+        this.image = 0;
+        this.maxPlayers = 0;
+        this.roomCode = "";
+    }
+
+    pieceInit(imageWidth, imageHeight, offsetX, offsetY, pieceLength){
+
+        function getRandomXY() {
+            let randX = Math.floor(Math.random() * (imageWidth + 2*offsetX - pieceLength)); 
+            
+            if(randX < (offsetX-pieceLength) || (randX) > (offsetX + imageWidth)){
+                return [randX, Math.floor(Math.random() * (imageHeight + 2*offsetY - pieceLength))]
+            }else{
+                let randY = Math.floor(Math.random() * (imageHeight + 2*offsetY - pieceLength))
+                if(randY < (offsetY - pieceLength) || (randY) > (offsetY + imageHeight)){
+                    return [randX, randY]
+                }else{
+                    return getRandomXY()
+                }
+            }
+            
+        }
+    
+    
+        let pieceArray = []
+        for(let col = 0; col < 16; col++){
+            for(let row = 0; row < 9; row++){
+                const randPair = getRandomXY()
+                pieceArray.push(new PuzzlePiece(randPair[0], randPair[1], col, row))
+            }
+        }
+    
+        this.pieces = pieceArray;
+    }
+}
+
 
 //map of roomcode to roomData object
 const roomDataMap = new Map();
@@ -33,7 +86,7 @@ io.on('connection', (socket) => {
     socket.on("roomDataRequest", (callback) => {roomDataRequestHandler(socket, callback)});
     socket.on("joinRoom", (code) => {joinRoomHandler(socket, io, code)});
     socket.on("destroyRoom", (code) => {destroyRoomHandler(io, code)});
-    socket.on("pieceUpdateToServer", (pieces) => {pieceUpdateToServerHandler(socket, pieces)})
+    socket.on("pieceUpdateToServer", (movingPiece) => {pieceUpdateToServerHandler(socket, movingPiece)})
     socket.on('disconnect', () => {
         console.log("user disconnected");
     });
@@ -108,14 +161,14 @@ function joinRoomHandler (socket, io, code){
     }
 };
 
-function pieceUpdateToServerHandler (socket, pieces){
+function pieceUpdateToServerHandler (socket, movingPiece){
     code = [...socket.rooms].filter(rooms => rooms!==socket.id)[0]
-    console.log('piece update sent from server from ' + socket.id + ' in room ' + code)
-
+    console.log(movingPiece + ' from ' + socket.id + ' in room ' + code)
     if(roomDataMap.has(code)){
         //update with new piece info
         let data = roomDataMap.get(code)
-        data.pieces = JSON.parse(pieces)
+        let index = data.pieces.findIndex((element) => ((element.row === movingPiece.row) && (element.col === movingPiece.col)))
+        data.pieces[index] = movingPiece;
         roomDataMap.set(code, data)
 
         //send it to everyone else

@@ -27,6 +27,7 @@ export const GameScreen = ({socket}) => {
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
         const [selectedPiece, setSelectedPiece] = useState(null);
+        const [sendSelectedPiece, setSendSelectedPiece] = useState(false)
         const puzzleImage = new Image()
 
         //Initial room data request and handling
@@ -41,34 +42,40 @@ export const GameScreen = ({socket}) => {
             socket.emit('roomDataRequest', (response) => {handleRoomData((response['roomData']))});
         }, [socket, handleRoomData])
 
+        
     
-        //draws on refresh
-        async function draw(ctx){
-            if(isDragging && selectedPiece){
-                puzzleImage.onload = () =>{
-                    ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
-                }
-                puzzleImage.src = chosenImage
-            }
-            else{
-                //full draw
-                ctx.fillStyle = "#323145";
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight)
-
-                //draw puzzle pieces
-                puzzleImage.onload = () =>{
-                    for(let i = 0; i < pieces.length; i++){
-                        ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
-                        ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
-                    }
-                }
-                puzzleImage.src = chosenImage
-            }
-        }
+        
 
         //general onRender
         useEffect(() =>{   
-            if(roomCode){
+            let requestId;
+
+            //draws on refresh
+            async function draw(ctx){
+                if(isDragging && selectedPiece){
+                    puzzleImage.onload = () =>{
+                        ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
+                    }
+                    puzzleImage.src = chosenImage
+                }
+                else{
+                    //full draw
+                    ctx.fillStyle = "#323145";
+                    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+                    //draw puzzle pieces
+                    puzzleImage.onload = () =>{
+                        for(let i = 0; i < pieces.length; i++){
+                            ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                            ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
+                        }
+                    }
+                    
+                }
+                requestId = requestAnimationFrame(draw);
+            }
+
+            if(roomCode){ 
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d', {alpha: false});
                 //draw game loop
@@ -76,8 +83,12 @@ export const GameScreen = ({socket}) => {
                 canvas.onmousemove=handleMouseMove;
                 //canvas.onmouseup=handleMouseUp;
                 //canvas.onmouseout=handleMouseOut;
-                draw(ctx)
+                draw(ctx);
             }
+
+            return () => {
+                cancelAnimationFrame(requestId);
+            };
         })
 
 
@@ -96,10 +107,11 @@ export const GameScreen = ({socket}) => {
         //Send server updated pieces 
         useEffect(() =>{
             //if we are moving a piece send data
-            if(isDragging){
-                socket.emit('pieceUpdateToServer', JSON.stringify(pieces))
+            if(sendSelectedPiece && selectedPiece){
+                socket.emit('pieceUpdateToServer', selectedPiece)
+                setSendSelectedPiece(false);
             }
-        }, [pieces, socket, isDragging])
+        }, [pieces, socket, sendSelectedPiece, selectedPiece])
         
 
         //TODO: MAYBE ADD THIS??? FIGURE IT OUT kinda wonky
@@ -136,10 +148,9 @@ export const GameScreen = ({socket}) => {
                     tempPiece.y = tempPiece.row*pieceLength+offsetY;
                     tempPiece.locked = true;
                     tempPieces[index] = tempPiece;
-                    setSelectedPiece(tempPiece)
                     setPieces(tempPieces);
                 }
-
+                setSendSelectedPiece(true);
                 setSelectedPiece(null);
                 setIsDragging(false);
             }else{
@@ -150,7 +161,6 @@ export const GameScreen = ({socket}) => {
                         setSelectedPiece(insidePiece)
                         setIsDragging(true);
                     }
-                    return;
                 }
             }   
             
@@ -197,6 +207,7 @@ export const GameScreen = ({socket}) => {
             tempPieces[index] = tempPiece;
 
             //update pieces
+            setSelectedPiece(tempPiece);
             setPieces(tempPieces);
 
             // update the starting drag position (== the current mouse position)
