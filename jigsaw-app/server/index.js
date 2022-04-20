@@ -1,10 +1,15 @@
+//For deployment
+//sudo iptables -I INPUT -p tcp --dport 80 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+//sudo iptables -I OUTPUT -p tcp --sport 80 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 
 
 
-const origin = "http://jigsaw.ianbechard.ca"
+const origin = "http://jigsaw.ianbechard.ca/*"
 //const origin = "http://localhost:3000"
 
 //Classes
