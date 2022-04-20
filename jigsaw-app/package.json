@@ -7,6 +7,8 @@
     "@testing-library/react": "^12.1.2",
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^4.6.1",
+    "dotenv": "^16.0.0",
+    "env-cmd": "^10.1.0",
     "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-bootstrap": "^2.1.0",

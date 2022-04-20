@@ -21,10 +21,10 @@ export const GameScreen = ({socket}) => {
         //roomData
         const [roomCode, setRoomCode] = useState('')
         const chosenImageArray = [
-            "http://jigsaw.ianbechard.ca/puzzleImages/hyperbeast_960-540.png",
-            "http://jigsaw.ianbechard.ca/puzzleImages/hyperbeast2_960-540.png",
-            "http://jigsaw.ianbechard.ca/puzzleImages/bloodMoonPixel_960-540.png",
-            "http://jigsaw.ianbechard.ca/puzzleImages/pixelFlower_960-540.png"
+            (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast_960-540.png"),
+            (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast2_960-540.png"),
+            (process.env.REACT_APP_API_URL + "/puzzleImages/bloodMoonPixel_960-540.png"),
+            (process.env.REACT_APP_API_URL + "/puzzleImages/pixelFlower_960-540.png")
         ];
         const [chosenImageIndex, setChosenImageIndex] = useState(0)
         const [pieces, setPieces] = useState(null); 
@@ -94,7 +94,7 @@ export const GameScreen = ({socket}) => {
 
                 //draw puzzle pieces
                 puzzleImage.onload = () =>{
-                    for(let i = 0; i < pieces.length; i++){
+                    for(let i = pieces.length - 1; i >= 0; i--){//this array being backwards lets us pick up the top piece when clicking on it instead of the bottom if they are piled
                         ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
                         ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
                     }

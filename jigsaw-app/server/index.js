@@ -8,9 +8,7 @@ const bodyParser = require('body-parser');
 const pino = require('express-pino-logger')();
 
 
-
-const origin = "http://jigsaw.ianbechard.ca/*"
-//const origin = "http://localhost:3000"
+const origin = process.env.SERVER_ORIGIN
 
 //Classes
 

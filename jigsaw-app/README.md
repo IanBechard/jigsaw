@@ -6,6 +6,7 @@ starts the server
 
 ### `npm run dev`
 starts the server and react app at the same time
+NOTE: when running on local vs published to the url you have to comment/uncomment enviroment variables in .env file!
 
 ### `npm start`
 
