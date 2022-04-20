@@ -36,6 +36,7 @@ export const GameScreen = ({socket}) => {
             console.log(roomData)
             setPieces(roomData.pieces);
             setRoomCode(roomData.roomCode);
+            setShouldStop(false); //starts our game loop
         }, [setPieces, setRoomCode]);
 
         useEffect(() =>{
@@ -45,57 +46,46 @@ export const GameScreen = ({socket}) => {
         
     
 
-        ///RENDER LOOP 
+        ///RENDER LOOP STUFF
 
-        //draws on refresh
-        async function draw(){
+        const [counter, setCounter] = useState(0)
+        const [shouldStop, setShouldStop] = useState(true)
 
+        // update the counter
+        useLayoutEffect(() => {
+            if (!shouldStop) {
+                let timerId
+
+                const animate = () => {
+                    setCounter(c => c + 1)
+                    timerId = requestAnimationFrame(animate)
+                }
+                timerId = requestAnimationFrame(animate)
+                return () => cancelAnimationFrame(timerId)
+            }
+        }, [shouldStop])
+
+        // output graphics
+        useEffect(() => {
+            const canvas = canvasRef.current;
             const ctx = canvasRef.current.getContext('2d', {alpha: false});
+            //Initialize mouse events
+            canvas.onmousedown=handleMouseDown;
+            canvas.onmousemove=handleMouseMove;
 
-            /*if(isDragging && selectedPiece){
-                puzzleImage.onload = () =>{
-                    ctx.drawImage(puzzleImage, selectedPiece.col*pieceLength, selectedPiece.row*pieceLength, pieceLength, pieceLength, selectedPiece.x, selectedPiece.y, pieceLength, pieceLength)
+            ctx.fillStyle = "#323145";
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+
+            //draw puzzle pieces
+             puzzleImage.onload = () =>{
+                for(let i = 0; i < pieces.length; i++){
+                    ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
+                    ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
                 }
-                puzzleImage.src = chosenImage
             }
-            else{ */
             puzzleImage.src = chosenImage
-                //full draw
-                ctx.fillStyle = "#323145";
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-                //draw puzzle pieces
-                puzzleImage.onload = () =>{
-                    for(let i = 0; i < pieces.length; i++){
-                        ctx.drawImage(puzzleImage, pieces[i].col*pieceLength, pieces[i].row*pieceLength, pieceLength, pieceLength, pieces[i].x, pieces[i].y, pieceLength, pieceLength)
-                        ctx.strokeRect(pieces[i].col*pieceLength+offsetX, pieces[i].row*pieceLength+offsetY, pieceLength, pieceLength)
-                    }
-                }
-                
-        
-            frameRequestIdRef.current = requestAnimationFrame(draw);
-        }
-
-        //general onRender loop
-        useEffect(() =>{   
-
-            if(roomCode && pieces){ 
-                const canvas = canvasRef.current;
-                
-                //draw game loop
-                canvas.onmousedown=handleMouseDown;
-                canvas.onmousemove=handleMouseMove;
-                //canvas.onmouseup=handleMouseUp;
-                //canvas.onmouseout=handleMouseOut;
-                frameRequestIdRef.current = requestAnimationFrame(draw);
-            }
-
-            return () => {
-                cancelAnimationFrame(frameRequestIdRef.current);
-            };
-        }, [draw])
-
-        
+        }, [counter])
 
 
         ///PUZZLE PIECE REQUESTS
