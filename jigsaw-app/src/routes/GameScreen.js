@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState, useLayoutEffect, useCallback} from 'react';
+import {Container, Button, Row } from 'react-bootstrap';
 import {useNavigate} from 'react-router-dom';
 import {insidePuzzlePiece, insidePieceGridPlace} from '../helpers/puzzlePiece'
 
@@ -15,26 +16,33 @@ export const GameScreen = ({socket}) => {
         const offsetY = (canvasHeight/2) - (imageHeight/2);
         const pieceLength = imageHeight/9; //16:9 images
 
-        const canvasOffsetWidth = (window.innerWidth/2) - (canvasWidth/2)
-        const canvasOffsetHeight = ((window.innerHeight)/2) - (canvasHeight/2)
+        const [canvasOffsetWidth, setCanvasOffsetWidth] = useState(0)
+        const [canvasOffsetHeight, setCanvasOffsetHeight] = useState(0)
 
-        //roomData
-        const [roomCode, setRoomCode] = useState('')
+        //Image urls for choice
         const chosenImageArray = [
             (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast_960-540.png"),
             (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast2_960-540.png"),
             (process.env.REACT_APP_API_URL + "/puzzleImages/bloodMoonPixel_960-540.png"),
             (process.env.REACT_APP_API_URL + "/puzzleImages/pixelFlower_960-540.png")
         ];
+
+        //roomData
+        const [roomCode, setRoomCode] = useState('')
         const [chosenImageIndex, setChosenImageIndex] = useState(0)
         const [pieces, setPieces] = useState(null); 
 
-
+        //Mouse and selected piece state
         const [mouseX, setMouseX] = useState(0);
         const [mouseY, setMouseY] = useState(0);
         const [isDragging, setIsDragging] = useState(false);
         const [selectedPiece, setSelectedPiece] = useState(null);
         const [sendSelectedPiece, setSendSelectedPiece] = useState(false)
+
+        //Reference Image button
+        const [showReferenceImage, setShowReferenceImage] = useState(false)
+        const [refImageButtonText, setRefImageButtonText] = useState("Show Reference Image")
+
         const puzzleImage = new Image()
 
         //Initial room data request and handling
@@ -85,6 +93,8 @@ export const GameScreen = ({socket}) => {
             if(roomCode){
                 const canvas = canvasRef.current;
                 const ctx = canvasRef.current.getContext('2d', {alpha: false});
+                setCanvasOffsetWidth(canvas.getBoundingClientRect().left)
+                setCanvasOffsetHeight(canvas.getBoundingClientRect().top)
                 //Initialize mouse events
                 canvas.onmousedown=handleMouseDown;
                 canvas.onmousemove=handleMouseMove;
@@ -151,6 +161,18 @@ export const GameScreen = ({socket}) => {
                     tempPiece.locked = true;
                     tempPieces[index] = tempPiece;
                     setPieces(tempPieces);
+
+                    //Check if you won
+                    let lockedPiecesCount = 0
+                    for(let i = 0; i < pieces.length; i++){
+                        if(pieces[i].locked){
+                            lockedPiecesCount++
+                        }
+                    }
+                    console.log(lockedPiecesCount)
+                    if(lockedPiecesCount === pieces.length){
+                        alert("Congratulations, you have completed the puzzle!")
+                    }
                 }
                 setSendSelectedPiece(true);
                 setSelectedPiece(null);
@@ -168,6 +190,47 @@ export const GameScreen = ({socket}) => {
             
         }
 
+        function handleMouseMove(e){
+            // return if we're not dragging
+            if(!isDragging){return;}
+            // tell the browser we're handling this event
+            e.preventDefault();
+            e.stopPropagation();
+            // calculate the current mouse position         
+            const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
+            const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
+            // how far has the mouse dragged from its previous mousemove position?
+            const dx=fnmouseX-mouseX;
+            const dy=fnmouseY-mouseY;
+            
+            // Update piece object with new xy
+            const index = pieces.indexOf(selectedPiece)
+            let tempPieces = [...pieces]
+            let tempPiece = pieces[index]
+
+            //update piece x
+            tempPiece.x += dx;
+            if(tempPiece.x < 0 || tempPiece.x > canvasWidth-(pieceLength/4)){//make sure not out of bounds, piecelength only allows for so much of a piece to be hidden
+                tempPiece.x = 0;
+            }
+
+            //update piece y
+            tempPiece.y += dy;
+            if(tempPiece.y < 0 || tempPiece.y > canvasHeight-(pieceLength/4)){
+                tempPiece.y = 0;
+            }
+            tempPieces[index] = tempPiece;
+
+            //update pieces
+            setSelectedPiece(tempPiece);
+            setPieces(tempPieces);
+
+            // update the starting drag position (== the current mouse position)
+            setMouseX(fnmouseX);
+            setMouseY(fnmouseY);
+
+        }
+        
         //This function could be in instead of toggling clicking a piece, could be click and hold to drag
         /*
         function handleMouseUp(e){
@@ -187,57 +250,35 @@ export const GameScreen = ({socket}) => {
         }
         */
 
-        function handleMouseMove(e){
-            // return if we're not dragging
-            if(!isDragging){return;}
-            // tell the browser we're handling this event
-            e.preventDefault();
-            e.stopPropagation();
-            // calculate the current mouse position         
-            const fnmouseX = parseInt(e.clientX-canvasOffsetWidth);
-            const fnmouseY = parseInt(e.clientY-canvasOffsetHeight);
-            // how far has the mouse dragged from its previous mousemove position?
-            const dx=fnmouseX-mouseX;
-            const dy=fnmouseY-mouseY;
-            
-            // Update piece object with new xy
-            const index = pieces.indexOf(selectedPiece)
-            let tempPieces = [...pieces]
-            let tempPiece = pieces[index]
-            tempPiece.x += dx;
-            tempPiece.y += dy;
-            tempPieces[index] = tempPiece;
-
-            //update pieces
-            setSelectedPiece(tempPiece);
-            setPieces(tempPieces);
-
-            // update the starting drag position (== the current mouse position)
-            setMouseX(fnmouseX);
-            setMouseY(fnmouseY);
-
-        }
-        
-
         return(
             <>
-                <div style={{backgroundColor: '#19232b',
-                            width: window.innerWidth,
-                            height: window.innerHeight,
+                <div style={{backgroundColor: '#282c34',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center'
                             }}>
-                    <canvas 
-                        ref={canvasRef}
-                        width={canvasWidth}
-                        height={canvasHeight}  
-                    />
-                </div>
-                <p style={{backgroundColor: '#323145',
-                            color:'white'
+                    <Container className='App-header'>
+                        <Row>
+                            {showReferenceImage && <img src={chosenImageArray[chosenImageIndex]} alt="server down sorry :("></img>}
+                        </Row>
+                        <Row>
+                            <Button className="leftAlign">Room Code: {roomCode}</Button>
+                            <Button id = "refImageButton" onClick={(e) => {
+                                setShowReferenceImage(!showReferenceImage); 
+                                showReferenceImage ? setRefImageButtonText("Show Reference Image") : setRefImageButtonText("Hide Reference Image");
                             }}>
-                                Room Code: {roomCode}</p>
+                            {refImageButtonText}
+                            </Button>
+                        </Row>
+                        <Row>
+                            <canvas 
+                                            ref={canvasRef}
+                                            width={canvasWidth}
+                                            height={canvasHeight}
+                            />
+                        </Row>
+                    </Container>
+                </div>
             </>
         );
 }
