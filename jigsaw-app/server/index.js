@@ -100,14 +100,17 @@ server.listen(8080, () => {
 
 function createRoomHandler (socket, io){
     let code = ""
-    while(true){
+    while(true){ //Generate random 4-char code
         for (let i = 0; i < 4; i++){
             code += String.fromCharCode(Math.random() * (90 - 65) + 65)
         } 
-        if(!io.of("/").adapter.rooms.has(code)){break;}
+        if(!io.of("/").adapter.rooms.has(code)){break;}//make sure we didn't generate a code currently in use
     }
+    
     //leave all previous rooms to avoid navigation errors
-    socket.rooms.forEach((room) => {if(room!==socket.id){console.log(socket.id + " left room " + room); socket.leave(room)}})
+    socket.rooms.forEach((room) => {if(room!==socket.id){
+        console.log(socket.id + " left room " + room); 
+        socket.leave(room)}})
 
     console.log("room created: " + code);
     socket.join(code);
@@ -165,19 +168,24 @@ function leaveRoomHandler(socket, code){
 function joinRoomHandler (socket, io, code, callback){
     code = code.toUpperCase()
     if(io.of("/").adapter.rooms.has(code)){ //If the room exists
-        currentNumPlayers = io.of("/").adapter.rooms.get(code).size
-        roomMaxPlayers = roomDataMap.get(code).maxPlayers
-        if(currentNumPlayers < roomMaxPlayers){ //Check if space available in room
-            //leave all previous rooms to avoid navigation errors
-            socket.rooms.forEach((room) => {if(room!==socket.id){console.log(socket.id + " left room " + room); socket.leave(room)}})
+        if(roomDataMap.has(code)){
+            currentNumPlayers = io.of("/").adapter.rooms.get(code).size
+            roomMaxPlayers = roomDataMap.get(code).maxPlayers
+            if(currentNumPlayers < roomMaxPlayers){ //Check if space available in room
+                //leave all previous rooms to avoid navigation errors
+                socket.rooms.forEach((room) => {if(room!==socket.id){console.log(socket.id + " left room " + room); socket.leave(room)}})
 
-            console.log(socket.id + " joined room: " + code)
-            socket.join(code)
-            console.log(io.of("/").adapter.rooms)
-            console.log(socket.rooms)
-            callback({})
-        }else{//No space
-            callback({error: "Room is full"})
+                console.log(socket.id + " joined room: " + code)
+                socket.join(code)
+                console.log(io.of("/").adapter.rooms)
+                console.log(socket.rooms)
+                callback({})
+            }else{//No space
+                callback({error: "Room is full"})
+            }
+        }
+        else{
+            callback({error: "Room has not been started yet"})
         }
     }else{//Room doesnt exist
         callback({error: "Room does not exist"})
