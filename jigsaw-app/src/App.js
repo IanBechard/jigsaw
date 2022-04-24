@@ -19,6 +19,7 @@ function App() {
       const url = process.env.REACT_APP_API_URL
       const newSocket = io.connect(url);
       setSocket(newSocket);
+      document.title = "Puzzle With Friends"
       return () => newSocket.close();
   }, [setSocket]);
 

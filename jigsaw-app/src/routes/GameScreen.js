@@ -52,7 +52,7 @@ export const GameScreen = ({socket}) => {
             setPieces(roomData.pieces);
             setRoomCode(roomData.roomCode);
             setChosenImageIndex(roomData.image);
-            setShouldStop(false); //starts our game loop
+            setShouldHaltRender(false); //starts our game loop
         }, [setPieces, setRoomCode]);
 
         useEffect(() =>{
@@ -72,21 +72,21 @@ export const GameScreen = ({socket}) => {
         ///RENDER LOOP STUFF
 
         const [counter, setCounter] = useState(0)
-        const [shouldStop, setShouldStop] = useState(true)
+        const [shouldHaltRender, setShouldHaltRender] = useState(true)
 
         // update the counter
         useLayoutEffect(() => {
-            if (!shouldStop) {
+            if (!shouldHaltRender) {
                 let timerId
 
                 const animate = () => {
-                    setCounter(c => c + 1)
+                    setCounter(n => n + 1)
                     timerId = requestAnimationFrame(animate)
                 }
                 timerId = requestAnimationFrame(animate)
                 return () => cancelAnimationFrame(timerId)
             }
-        }, [shouldStop])
+        }, [shouldHaltRender])
 
         // output graphics
         useEffect(() => {
@@ -111,6 +111,7 @@ export const GameScreen = ({socket}) => {
                 }
                 puzzleImage.src = chosenImageArray[chosenImageIndex];
             }
+            //eslint-disable-next-line
         }, [counter])
 
 
