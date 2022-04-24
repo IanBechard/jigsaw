@@ -151,6 +151,7 @@ function roomDataRequestHandler(socket, callback){
 
 function destroyRoomHandler (io, roomCode){
     io.socketsLeave(roomCode)
+    roomDataMap.delete(roomCode)
     console.log(io.of("/").adapter.rooms)
 
 }
