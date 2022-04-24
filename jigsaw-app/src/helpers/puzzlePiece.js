@@ -27,4 +27,34 @@ export const insidePieceGridPlace = (x, y, piece, pieceLength, offsetX, offsetY)
     return false;
 }
 
+export const shufflePieces = (pieces, imageWidth, imageHeight, offsetX, offsetY, pieceLength) =>{
+    function getRandomXY() {
+        let randX = Math.floor(Math.random() * (imageWidth + 2*offsetX - pieceLength)); 
+        
+        if(randX < (offsetX-pieceLength) || (randX) > (offsetX + imageWidth)){
+            return [randX, Math.floor(Math.random() * (imageHeight + 2*offsetY - pieceLength))]
+        }else{
+            let randY = Math.floor(Math.random() * (imageHeight + 2*offsetY - pieceLength))
+            if(randY < (offsetY - pieceLength) || (randY) > (offsetY + imageHeight)){
+                return [randX, randY]
+            }else{
+                return getRandomXY()
+            }
+        }
+    }
+    let tempPieces = []
+    for(let i = 0; i < pieces.length; i++){
+        if(pieces[i].locked === false){
+            const tempPiece = pieces[i]
+            const randPair = getRandomXY()
+            tempPiece.x = randPair[0]
+            tempPiece.y = randPair[1]
+            tempPieces.push(tempPiece)
+        }
+        else{
+            tempPieces.push(pieces[i])
+        }
+    }
+    return tempPieces
+}
 

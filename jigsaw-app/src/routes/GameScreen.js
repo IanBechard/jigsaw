@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState, useLayoutEffect, useCallback} from 'react';
 import {Container, Button, Row } from 'react-bootstrap';
 import {useNavigate} from 'react-router-dom';
-import {insidePuzzlePiece, insidePieceGridPlace} from '../helpers/puzzlePiece'
+import {insidePuzzlePiece, insidePieceGridPlace, shufflePieces} from '../helpers/puzzlePiece'
 
 export const GameScreen = ({socket}) => {
         const canvasRef = useRef(null);
@@ -264,6 +264,12 @@ export const GameScreen = ({socket}) => {
                         </Row>
                         <Row>
                             <Button className="leftAlign">Room Code: {roomCode}</Button>
+                            <Button className="leftAlign" onClick={(e) =>{
+                                setPieces(shufflePieces(pieces, imageWidth, imageHeight, offsetX, offsetY, pieceLength))
+                                for(let i = 0; i < pieces.length; i++){
+                                    socket.emit('pieceUpdateToServer', pieces[i])
+                                }
+                            }}>Shuffle Pieces</Button>
                             <Button id = "refImageButton" onClick={(e) => {
                                 setShowReferenceImage(!showReferenceImage); 
                                 showReferenceImage ? setRefImageButtonText("Show Reference Image") : setRefImageButtonText("Hide Reference Image");
