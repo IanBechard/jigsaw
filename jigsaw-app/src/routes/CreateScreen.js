@@ -44,7 +44,7 @@ export const CreateScreen = ({socket}) => {
             setImage(1)
             setMaxPlayers(1)
         };
-    }, [socket, handlePing, handleRoomCode]);
+    }, [socket, handleRoomCode]);
 
     
 
