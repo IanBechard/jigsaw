@@ -10,10 +10,6 @@ export const CreateScreen = ({socket}) => {
     const [difficulty, setDifficulty] = useState('medium');
     const [image, setImage] = useState(0);
     const [maxPlayers, setMaxPlayers] = useState(20);
-
-    const handlePing = useCallback(() => {
-        console.log("ping recieved")
-    }, []);
     
     const handleRoomCode = useCallback((roomCode) => {
         console.log(roomCode)
@@ -39,11 +35,9 @@ export const CreateScreen = ({socket}) => {
 
     useEffect(() => {
         socket.emit('createRoom')
-        socket.on('ping', handlePing);
         socket.on('roomCode', (msg) => {handleRoomCode(msg)})
 
         return () => {
-            socket.off('ping', handlePing)
             socket.off('roomCode', handleRoomCode)
             setRoomCode(null)
             setDifficulty('medium')

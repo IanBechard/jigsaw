@@ -113,7 +113,6 @@ function createRoomHandler (socket, io){
     socket.join(code);
     console.log(socket.id + " joined room: " + code)
     socket.emit('roomCode', code)
-    io.to(code).emit('ping')
 };
 
 
