@@ -21,10 +21,10 @@ export const GameScreen = ({socket}) => {
 
         //Image urls for choice
         const chosenImageArray = [
-            (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast_960-540.png"),
-            (process.env.REACT_APP_API_URL + "/puzzleImages/hyperbeast2_960-540.png"),
-            (process.env.REACT_APP_API_URL + "/puzzleImages/bloodMoonPixel_960-540.png"),
-            (process.env.REACT_APP_API_URL + "/puzzleImages/pixelFlower_960-540.png")
+            ("puzzleImages/hyperbeast_960-540.png"),
+            ("puzzleImages/hyperbeast2_960-540.png"),
+            ("puzzleImages/bloodMoonPixel_960-540.png"),
+            ("puzzleImages/pixelFlower_960-540.png")
         ];
 
         //roomData
